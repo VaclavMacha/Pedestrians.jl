@@ -1,0 +1,3 @@
+module Pedestrians
+
+end # module

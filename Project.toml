@@ -1,0 +1,9 @@
+name = "Pedestrians"
+uuid = "5c199317-ac77-4ff4-b14f-8d2d2b3fe792"
+authors = ["VaclavMacha <vaclav.macha92@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
