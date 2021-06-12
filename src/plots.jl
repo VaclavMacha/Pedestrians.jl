@@ -54,8 +54,11 @@ function makeplot!(plt, d::Door)
         first.(pos),
         last.(pos);
         label = "",
-        linecolor = :black,
+        linecolor = :white,
         linewidth = 4,
+        marker = :square,
+        markercolor = RGB(143/256, 31/256, 120/256),
+        markersize = 4,
     )
     return plt
 end
