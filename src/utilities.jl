@@ -32,7 +32,7 @@ Computes euclidian coordinates from the given polar coordinates coordinates `(r,
 """
 function euclidian(r::Real, ϕ::Real, origin = (0, 0))
     r >= 0 || throw(ArgumentError("r must be greater or equal to 0."))
-    π < ϕ <= π || throw(ArgumentError("ϕ must be from interval (-π, π]."))
+    -π < ϕ <= π || throw(ArgumentError("ϕ must be from interval (-π, π]."))
     return origin .+ r .* (cos(ϕ), sin(ϕ))
 end
 
