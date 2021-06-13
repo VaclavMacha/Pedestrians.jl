@@ -79,7 +79,26 @@ function makeplot!(plt, o::Rectangle)
     return plt
 end
 
-function makeplot!(plt, ps::Vector{<:Pedestrian})
+function makeplot!(plt, ps::Vector{<:Pedestrian}; addview = false)
+    if addview
+        for p in ps
+            norm(p.vel) == 0 && continue
+            r = norm(p.vel, 2)
+            ϕ = direction_angle(p.vel)
+            pos = vcat(
+                p.pos,
+                euclidian.(r, ϕ .+ range(-p.φ/2, p.φ/2; length = 10), Ref(p.pos)),
+            )
+            plot!(
+                plt,
+                Shape(first.(pos), last.(pos));
+                label = "",
+                color = getcolor.(p.id),
+                alpha = 0.25,
+            )
+        end
+    end
+
     pos = getproperty.(ps, :pos)
     cls = getcolor.(getproperty.(ps, :id))
     scatter!(

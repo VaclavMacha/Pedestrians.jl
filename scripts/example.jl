@@ -2,18 +2,18 @@ using Revise
 
 using Pedestrians
 using Plots
+using LinearAlgebra
 
-
-ps = [
-    Pedestrian(1, (3, 3), 1),
-    Pedestrian(2, (1, 2), 1),
-    Pedestrian(3, (5, 5), 1),
-    Pedestrian(4, (2, 1), 1),
-]
+target = (3, 0)
+ps = map(enumerate([(3, 3), (1, 2), (5, 4), (2, 1)])) do (i, pos)
+    vel = target .- pos
+    vel = 0.5 .* vel ./ norm(vel,2)
+    Pedestrian(i, pos, 1; vel)
+end
 
 r = Room()
 
-using Plots: Plot
-
-plt = makeplot(r)
-makeplot!(plt, ps)
+@time begin
+    plt = makeplot(r)
+    makeplot!(plt, ps; addview = true)
+end
