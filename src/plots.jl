@@ -64,7 +64,7 @@ function makeplot!(plt::Plot, r::Room; q = 100, addtargets = true, kwargs...)
 end
 
 function makeplot!(plt, d::Door)
-    pos = [d.pos1, d.pos2]
+    pos = [d.pos, d.pos .+ (d.width, 0)]
     plot!(
         plt,
         first.(pos),
