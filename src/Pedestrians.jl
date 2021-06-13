@@ -5,7 +5,7 @@ using LinearAlgebra
 using Random
 using Requires
 
-export Pedestrian, Room, Door
+export Pedestrian, Room, Door, Obstacle, Rectangle
 
 # basic types
 Base.@kwdef mutable struct Pedestrian <: AbstractAgent
@@ -29,9 +29,20 @@ struct Door
     pos2::NTuple{2,Float64}
 end
 
+abstract type Obstacle end
+struct Rectangle <: Obstacle
+    id::Int
+    pos::NTuple{2,Float64} 
+    width::Float64
+    height::Float64
+end
+
 Base.@kwdef struct Room
-    height::Float64 = 5
     width::Float64 = 6
+    height::Float64 = 5
+    obstacle::Dict{Int, <:Obstacle} = Dict(
+        1 => Rectangle(1, (2.4, 1.9), 1.2, 0.5),
+    )
     entrance::Dict{Int, Door} = Dict(
         1 => Door(1, (1.05, height), (1.65, height)),
         2 => Door(2, (2.7, height), (3.3, height)),

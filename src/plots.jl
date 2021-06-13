@@ -44,6 +44,11 @@ function makeplot!(plt::Plot, r::Room; q = 100, kwargs...)
     for (~, d) in r.exit
         makeplot!(plt, d)
     end
+
+    # add obstacles
+    for (~, o) in r.obstacle
+        makeplot!(plt, o)
+    end
     return plt
 end
 
@@ -59,6 +64,17 @@ function makeplot!(plt, d::Door)
         marker = :square,
         markercolor = RGB(143/256, 31/256, 120/256),
         markersize = 4,
+    )
+    return plt
+end
+
+function makeplot!(plt, o::Rectangle)
+    (x, y), w, h = o.pos, o.width, o.height 
+    plot!(
+        plt,
+        Shape(x .+ [0,w,w,0], y .+ [0,0,h,h]);
+        label = "",
+        color = RGB(143/256, 31/256, 120/256),
     )
     return plt
 end
