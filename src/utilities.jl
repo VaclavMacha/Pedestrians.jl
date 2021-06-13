@@ -16,14 +16,18 @@ function direction(x, y; normed = true)
 end
 
 """
+    direction_angle(d)
+
+Computes angle in radians of the direction `d`.
+"""
+direction_angle(d) = atan(d[2], d[1])
+
+"""
     direction_angle(x, y)
 
 Computes angle in radians of the direction from `x` to `y`.
 """
-function direction_angle(x, y)
-    dir = direction(x, y)
-    return atan(dir[2], dir[1])
-end
+direction_angle(x, y) = atan(direction(x, y))
 
 """
     euclidian(r::Real, ϕ::Real, origin = (0, 0))
@@ -32,7 +36,7 @@ Computes euclidian coordinates from the given polar coordinates coordinates `(r,
 """
 function euclidian(r::Real, ϕ::Real, origin = (0, 0))
     r >= 0 || throw(ArgumentError("r must be greater or equal to 0."))
-    -π < ϕ <= π || throw(ArgumentError("ϕ must be from interval (-π, π]."))
+    ϕ = mod1(ϕ + π, 2π) - π
     return origin .+ r .* (cos(ϕ), sin(ϕ))
 end
 
