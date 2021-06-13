@@ -12,3 +12,5 @@ Package is not registered and can be installed using Pkg REPL as follows
 (@v1.6) pkg> https://github.com/VaclavMacha/Pedestrians.jl
 ```
 ## Tutorial
+
+![](assets/room.svg)
