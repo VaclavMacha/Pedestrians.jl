@@ -37,6 +37,11 @@ struct Rectangle <: Obstacle
     height::Float64
 end
 
+struct Target
+    id::Int
+    pos::NTuple{2,Float64} 
+end
+
 Base.@kwdef struct Room
     width::Float64 = 6
     height::Float64 = 5
@@ -49,6 +54,16 @@ Base.@kwdef struct Room
         3 => Door(3, (4.35, height), (4.95, height))
     )
     exit::Dict{Int, Door} = Dict(1 => Door(1, (2.7, 0), (3.3, 0)))
+    checkpoint::Dict{Int, Target} = Dict(
+        1 => Target(1, (2.0, 4)),
+        2 => Target(2, (3.0, 4)),
+        3 => Target(3, (4.0, 4)),
+        4 => Target(4, (2.0, 2.4)),
+        5 => Target(5, (2.0, 1.9)),
+        6 => Target(6, (4.0, 2.4)),
+        7 => Target(7, (4.0, 1.9)),
+    )
+    target::Dict{Int, Target} = Dict(1 => Target(1, (3.0, 0)))
 end
 
 include("utilities.jl")

@@ -18,7 +18,7 @@ getcolor(id) = COLORS[mod1(id, 7)]
 makeplot(obj; kwargs...) = makeplot!(plot(), obj; kwargs...)
 makeplot!(obj; kwargs...) = makeplot!(current(), obj; kwargs...)
 
-function makeplot!(plt::Plot, r::Room; q = 100, kwargs...)
+function makeplot!(plt::Plot, r::Room; q = 100, addtargets = true, kwargs...)
     w, h = r.width, r.height 
     
     # plot wall
@@ -49,6 +49,15 @@ function makeplot!(plt::Plot, r::Room; q = 100, kwargs...)
     for (~, o) in r.obstacle
         makeplot!(plt, o)
     end
+
+    # add targets
+    if addtargets
+        ts = vcat(
+            collect(values(r.checkpoint)),
+            collect(values(r.target)),
+        )
+        makeplot!(plt, ts)
+    end
     return plt
 end
 
@@ -75,6 +84,20 @@ function makeplot!(plt, o::Rectangle)
         Shape(x .+ [0,w,w,0], y .+ [0,0,h,h]);
         label = "",
         color = RGB(143/256, 31/256, 120/256),
+    )
+    return plt
+end
+
+function makeplot!(plt, ts::Vector{<:Target})
+    pos = getproperty.(ts, :pos)
+    scatter!(
+        plt,
+        first.(pos),
+        last.(pos);
+        label = "",
+        marker = :x,
+        markercolor = :gray,
+        markersize = 6,
     )
     return plt
 end
