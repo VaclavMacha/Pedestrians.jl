@@ -92,7 +92,7 @@ function makeplot!(plt, o::Rectangle)
     return plt
 end
 
-function makeplot!(plt, ts::Vector{<:Target})
+function makeplot!(plt, ts::Vector{<:Checkpoint})
     pos = getproperty.(ts, :pos)
     scatter!(
         plt,
