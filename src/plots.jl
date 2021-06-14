@@ -20,7 +20,7 @@ getcolor(id) = COLORS[mod1(id, 7)]
 makeplot(obj; kwargs...) = makeplot!(plot(), obj; kwargs...)
 makeplot!(obj; kwargs...) = makeplot!(current(), obj; kwargs...)
 
-function makeplot!(plt::Plot, r::Room; q = 100, addtargets = true, kwargs...)
+function makeplot!(plt::Plot, r::Room; q = 100, addcheckpoints = true, kwargs...)
     w, h = r.width, r.height 
     
     # plot wall
@@ -40,25 +40,21 @@ function makeplot!(plt::Plot, r::Room; q = 100, addtargets = true, kwargs...)
     )
 
     # add doors
-    for (~, d) in r.entrance
+    for (~, d) in r.entrances
         makeplot!(plt, d)
     end
-    for (~, d) in r.exit
+    for (~, d) in r.exits
         makeplot!(plt, d)
     end
 
     # add obstacles
-    for (~, o) in r.obstacle
+    for (~, o) in r.obstacles
         makeplot!(plt, o)
     end
 
-    # add targets
-    if addtargets
-        ts = vcat(
-            collect(values(r.checkpoint)),
-            collect(values(r.target)),
-        )
-        makeplot!(plt, ts)
+    # add checkpoints
+    if addcheckpoints
+        makeplot!(plt, collect(values(r.checkpoints)))
     end
     return plt
 end

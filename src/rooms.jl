@@ -12,9 +12,9 @@ Returns the nearest point from the door `d` to the point `pos`. Argument `d_min`
 function nearest(d::Door, pos::NTuple{2, Float64}, d_min = 0)
     (xd, yd), w = d.pos, d.width
     x, ~ = pos
-    return if xd + d_min > x
+    return if x < xd + d_min
         (xd + d_min, yd)
-    elseif xd + w - d_min
+    elseif x > xd + w - d_min
         (xd + w - d_min, yd)
     else
         (x, yd)
@@ -36,16 +36,16 @@ nearest(c::Checkpoint, ::NTuple{2, Float64}) = c.pos
 Base.@kwdef struct Room
     width::Float64 = 6
     height::Float64 = 5
-    obstacle::Dict{Int, <:Obstacle} = Dict(
+    obstacles::Dict{Int, <:Obstacle} = Dict(
         1 => Rectangle(1, (2.4, 1.9), 1.2, 0.5),
     )
-    entrance::Dict{Int, Door} = Dict(
+    entrances::Dict{Int, Door} = Dict(
         1 => Door(1, (1.05, height), 0.6),
         2 => Door(2, (2.7, height), 0.6),
         3 => Door(3, (4.35, height), 0.6)
     )
-    exit::Dict{Int, Door} = Dict(1 => Door(1, (2.7, 0), 0.6))
-    checkpoint::Dict{Int, Checkpoint} = Dict(
+    exits::Dict{Int, Door} = Dict(1 => Door(1, (2.7, 0), 0.6))
+    checkpoints::Dict{Int, Checkpoint} = Dict(
         1 => Checkpoint(1, (2.0, 4)),
         2 => Checkpoint(2, (3.0, 4)),
         3 => Checkpoint(3, (4.0, 4)),
@@ -54,5 +54,4 @@ Base.@kwdef struct Room
         6 => Checkpoint(6, (4.0, 2.4)),
         7 => Checkpoint(7, (4.0, 1.9)),
     )
-    target::Dict{Int, Checkpoint} = Dict(1 => Checkpoint(1, (3.0, 0)))
 end
