@@ -5,12 +5,15 @@ using LinearAlgebra
 using Random
 using Requires
 
-export Pedestrian
+export Pedestrian, Parameters
 export Obstacle, Rectangle
 export Room, Door, Checkpoint
 
+export blind_velocity!
+
 # basic types
 abstract type Obstacle end
+abstract type CheckpointStrategy end
 
 include("utilities.jl")
 include("obstacles.jl")
