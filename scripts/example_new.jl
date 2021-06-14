@@ -39,8 +39,8 @@ end
 
 k = 120
 @time anim = @animate for i in 1:k
-    plt = makeplot(r; title = "$i")
-    makeplot!(plt, collect(values(model.agents)); addview = false)
+    plt = makeplot(r; title = "Blind velocity (no interactions): $i", ylims = (-0.5, 5.1))
+    makeplot!(plt, collect(values(model.agents)); addview = true)
     step!(model, agent_step!)
 end;
-gif(anim, "anim_fps15.gif", fps = 10)
+gif(anim, "./assets/blind_velocity.gif", fps = 10)

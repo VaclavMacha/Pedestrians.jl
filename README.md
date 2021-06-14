@@ -14,3 +14,4 @@ Package is not registered and can be installed using Pkg REPL as follows
 ## Tutorial
 
 ![](assets/room.svg)
+![](assets/blind_velocity.gif)
