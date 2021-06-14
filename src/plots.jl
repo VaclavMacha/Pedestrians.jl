@@ -106,7 +106,7 @@ function makeplot!(plt, ps::Vector{<:Pedestrian}; addview = false)
     if addview
         for p in ps
             norm(p.vel) == 0 && continue
-            r = norm(p.vel, 2)
+            r = 0.5
             ϕ = direction_angle(p.vel)
             pos = vcat(
                 p.pos,
