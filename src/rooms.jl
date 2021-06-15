@@ -21,6 +21,8 @@ function nearest(d::Door, pos::NTuple{2, Float64}, d_min = 0)
     end
 end
 
+middle(d::Door) = (d.pos[1] + d.width/2, d.pos[2])
+
 struct Checkpoint
     id::Int
     pos::NTuple{2,Float64} 
