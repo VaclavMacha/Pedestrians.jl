@@ -46,3 +46,10 @@ end
 Computes polar coordinates from the given 2D euclidian coordinates `(x, y)`.
 """
 polar(x::Real, y::Real) = (hypot(x, y), atan(y, x))
+
+
+function clip(pos::NTuple{2, Float64}, model)
+    x, y = pos
+    w, h = prevfloat(model.room.width), prevfloat(model.room.height)
+    return (max(min(x, w), nextfloat(0.0)), max(min(y, h), nextfloat(0.0)))
+end
