@@ -8,8 +8,9 @@ using Requires
 export Pedestrian, Parameters
 export Obstacle, Rectangle
 export Room, Door, Checkpoint
+export Basic, Nearest
 
-export blind_velocity!, add_pedestrian!, simulation_step!
+export build_model, simulation_step!
 
 # basic types
 Base.@kwdef mutable struct Pedestrian <: AbstractAgent
@@ -55,6 +56,13 @@ Base.@kwdef struct Parameters
     t::Ref{Float64} = Ref(0.) # time
     Δt::Float64 = 0.05     # time step
     n::Float64 = 300       # maximal number of pedestrians
+end
+
+function build_model(; spacing = 0.01, kwargs...)
+    pars = Parameters()
+    r = pars.room
+    space2d = ContinuousSpace((r.width, r.height), spacing; periodic = false)
+    return ABM(Pedestrian, space2d, properties = pars)
 end
 
 function __init__()
