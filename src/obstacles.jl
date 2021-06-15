@@ -1,3 +1,5 @@
+abstract type Obstacle end
+
 struct Rectangle <: Obstacle
     id::Int
     pos::NTuple{2,Float64} 
