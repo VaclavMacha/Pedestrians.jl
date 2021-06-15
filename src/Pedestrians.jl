@@ -58,11 +58,14 @@ Base.@kwdef struct Parameters
     n::Float64 = 300       # maximal number of pedestrians
 end
 
-function build_model(; spacing = 0.01, kwargs...)
-    pars = Parameters()
+build_model(; spacing = 0.01, kwargs...) = build_model(Parameters(; kwargs...); spacing)
+
+function build_model(pars::Parameters; spacing = 0.01)
     r = pars.room
     space2d = ContinuousSpace((r.width, r.height), spacing; periodic = false)
-    return ABM(Pedestrian, space2d, properties = pars)
+    model = ABM(Pedestrian, space2d, properties = pars)
+    model.maxid[] = model.timestrategy.counter
+    return model
 end
 
 function __init__()
