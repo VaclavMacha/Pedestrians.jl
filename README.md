@@ -14,4 +14,22 @@ Package is not registered and can be installed using Pkg REPL as follows
 ## Tutorial
 
 ![](assets/room.svg)
+
+### Blind velocity
+
+```julia
+using Pedestrians, Plots
+
+# create model
+model = build_model()
+
+# run simulation
+@time anim = @animate for i in 1:500
+    title = string("Blind velocity: ", lpad(i, 3, " "))
+    makeplot(model; title, addview = true)
+    simulation_step!(model)
+end;
+gif(anim, "./assets/blind_velocity.gif", fps = 10)
+```
+
 ![](assets/blind_velocity.gif)
