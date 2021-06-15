@@ -20,6 +20,21 @@ getcolor(id) = COLORS[mod1(id, 7)]
 makeplot(obj; kwargs...) = makeplot!(plot(), obj; kwargs...)
 makeplot!(obj; kwargs...) = makeplot!(current(), obj; kwargs...)
 
+function makeplot!(
+    plt::Plot,
+    model::AgentBasedModel;
+    addview = false,
+    kwargs...
+)
+    title = get(kwargs, :title, "Simulation: $(model.timestrategy.iter)")
+    xlims = get(kwargs, :xlims, (-0.1, model.room.width + 0.1))
+    ylims = get(kwargs, :ylims, (-0.1, model.room.height + 0.1))
+
+    makeplot!(plt, model.room; title, xlims, ylims, kwargs...)
+    makeplot!(plt, collect(values(model.agents)); addview)
+    return plt
+end
+
 function makeplot!(plt::Plot, r::Room; q = 100, addcheckpoints = true, kwargs...)
     w, h = r.width, r.height 
     
