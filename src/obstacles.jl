@@ -1,28 +1,27 @@
 abstract type Obstacle end
 
-struct Rectangle <: Obstacle
-    id::Int
-    pos::NTuple{2,Float64} 
-    width::Float64
-    height::Float64
+struct Rectangle{T<:Real} <: Obstacle
+    pos::Point{T} 
+    width::T
+    height::T
 end
 
 """
-    isinside(r::Rectangle, pos::NTuple{2, Float64})
+    isinside(r::Rectangle, pos::Point)
 
-Checks wheter give point `pos` lays inside of the rectangle `r`.
+Checks wheter give point `pos` lies inside of the rectangle `r`.
 """
-function isinside(r::Rectangle, pos::NTuple{2, Float64})
+function isinside(r::Rectangle, pos::Point)
     (xr, yr), w, h = r.pos, r.width, r.height
     return xr <= pos[1] <= xr + w && yr <= pos[2] <= yr + h
 end
 
 """
-    nearest(r::Rectangle, pos::NTuple{2, Float64})
+    nearest(r::Rectangle, pos::Point)
 
 Returns the nearest point from the border of the rectangle `r` to the point `pos`.
 """
-function nearest(r::Rectangle, pos::NTuple{2, Float64})
+function nearest(r::Rectangle, pos::Point)
     isinside(r, pos) && throw(ArgumentError("position must be outside of the rectangle"))
 
     (xr, yr), w, h = r.pos, r.width, r.height
@@ -53,11 +52,11 @@ function nearest(r::Rectangle, pos::NTuple{2, Float64})
 end
 
 """
-    isvalid(r::Rectangle, pos::NTuple{2, Float64}, d_min)
+    isvalid(o::Rectangle, pos::Point, r)
 
-Checks wheter give point `pos` is valid, i.e., if the distance to the nearest point of the rectangle `r` is greater or equal to the minimum distance `d_min`. 
+Checks wheter give point `pos` is valid, i.e., if the distance to the nearest point of the rectangle `o` is greater or equal to the minimum distance `r`. 
 """
-function isvalid(r::Rectangle, pos::NTuple{2, Float64}, d_min = 0)
-    isinside(r, pos) && return false
-    return distance(nearest(r, pos), pos) >= d_min
+function isvalid(o::Rectangle, pos::Point, r = 0)
+    isinside(o, pos) && return false
+    return distance(nearest(o, pos), pos) >= r
 end

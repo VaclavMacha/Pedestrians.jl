@@ -6,13 +6,15 @@ using Random
 using Requires
 
 export Pedestrian, Parameters
-export Obstacle, Rectangle
+export Obstacle, Rectangle, Circle
 export Room, Door, Checkpoint
 export Basic, Nearest
 
 export build_model, simulation_step!
 
 # basic types
+const Point{T} = NTuple{2, T}
+
 Base.@kwdef mutable struct Pedestrian <: AbstractAgent
     # mandatory properties
     id::Int
@@ -32,6 +34,7 @@ Pedestrian(id, pos; kwargs...) = Pedestrian(; id, pos, kwargs...)
 hasfinished(p::Pedestrian) = p.finished
 
 include("utilities.jl")
+include("targets.jl")
 include("obstacles.jl")
 include("rooms.jl")
 include("timestrategies.jl")
@@ -48,22 +51,29 @@ Base.@kwdef struct Parameters
     τs::Float64 = 0.25     # minimum (physical) pedestrian size
     v_opt::Float64 = 1.3   # pedestrian optimum speed
     ν::Float64 = π/4       # pedestrian field of vision
-    φ::Float64 = 3π/4      # maximum change of a pedestrian course
+
+    # Course change
+    kr::Int64 = 10
+    φ::Float64 = 3π/4  # maximum change of a pedestrian course
+    φmax::Float64 = 2π # maximum change of a pedestrian course if norm(vel) == 0
+    Δφ::Float64 = 0.1
+
+    # shortening
+    Δr::Float64 = 0.05
+
     a::Float64 = 0.5       # pedestrian acceleration
     a_crisis::Float64 = 60 # acceleration if an arch occurs
     ϑ::Float64 = π/32      # field of vision if an arch occurs
-    iter::Ref{Int64} = Ref(0) # time
-    t::Ref{Float64} = Ref(0.) # time
     Δt::Float64 = 0.05     # time step
     n::Float64 = 300       # maximal number of pedestrians
 end
 
 build_model(; spacing = 0.01, kwargs...) = build_model(Parameters(; kwargs...); spacing)
 
-function build_model(pars::Parameters; spacing = 0.01)
+function build_model(pars::Parameters; scheduler = random_activation, spacing = 0.01)
     r = pars.room
     space2d = ContinuousSpace((r.width, r.height), spacing; periodic = false)
-    model = ABM(Pedestrian, space2d, properties = pars)
+    model = ABM(Pedestrian, space2d; scheduler, properties = pars)
     model.maxid[] = model.timestrategy.counter
     return model
 end

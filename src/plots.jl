@@ -35,46 +35,78 @@ function makeplot!(
     return plt
 end
 
-function makeplot!(plt::Plot, r::Room; q = 100, addcheckpoints = true, kwargs...)
-    w, h = r.width, r.height 
+function makeplot!(
+    plt::Plot,
+    room::Room;
+    q = 100,
+    addcheckpoints = true,
+    addvalid = false,
+    r = 0.25,
+    k = 500,
+    kwargs...
+)
     
-    # plot wall
     plot!(
-        plt,
-        [0, w, w, 0, 0],
-        [0, 0, h, h, 0];
+        plt;
         label = "",
         ratio = :equal,
-        linecolor = MAIN_COLOR,
-        linewidth = 2,
         legend = false,
         axis = nothing,
         border = :none,
-        size = (q*w, q*h),
         kwargs...
-    )
+        )
+
+    # plot wall
+    makeplot!(plt, room.shape, q)
 
     # add doors
-    for (~, d) in r.entrances
-        makeplot!(plt, d)
-    end
-    for (~, d) in r.exits
-        makeplot!(plt, d)
+    for d in vcat(room.entrances, room.exits)
+        makeplot!(plt, d, addcheckpoints, r)
     end
 
     # add obstacles
-    for (~, o) in r.obstacles
+    for o in room.obstacles
         makeplot!(plt, o)
     end
 
     # add checkpoints
     if addcheckpoints
-        makeplot!(plt, collect(values(r.checkpoints)))
+        makeplot!(plt, room.checkpoints)
+    end
+
+    if addvalid
+        xs, ys = computerange(room.shape, k)
+        heatmap!(
+            xs,
+            ys,
+            (x, y) -> isvalid(room, (x, y), r);
+            color = [MAIN_COLOR, :white],
+            opacity = 0.2,
+            cbar = false,
+        )
     end
     return plt
 end
 
-function makeplot!(plt, d::Door)
+function computerange(s::RoomRectangle, k)
+    return (range(0, s.width; length = k), range(0, s.height; length = k))
+end
+
+function makeplot!(plt, s::RoomRectangle, q)
+    w, h = s.width, s.height
+
+    plot!(
+        plt,
+        [0, w, w, 0, 0],
+        [0, 0, h, h, 0];
+        linecolor = MAIN_COLOR,
+        linewidth = 2,
+        size = (q*w, q*h),
+    )
+    return plt
+end
+
+function makeplot!(plt, d::Door, addcheckpoints, r)
     pos = [d.pos, d.pos .+ (d.width, 0)]
     plot!(
         plt,
@@ -88,6 +120,19 @@ function makeplot!(plt, d::Door)
         markerstrokecolor = MAIN_COLOR,
         markersize = 4,
     )
+    if addcheckpoints
+        pos = [d.pos .+ (r, 0), d.pos .+ (d.width - r, 0)]
+        plot!(
+            plt,
+            first.(pos),
+            last.(pos);
+            label = "",
+            marker = :vline,
+            linecolor = :gray,
+            markercolor = :gray,
+            markersize = 6,
+        )
+    end
     return plt
 end
 
