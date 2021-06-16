@@ -28,7 +28,7 @@ function nearest(r::Rectangle, pos::NTuple{2, Float64})
     (xr, yr), w, h = r.pos, r.width, r.height
     x, y = pos
     return if x < xr
-        if yr < y
+        if y < yr
             (xr, yr)
         elseif y > yr + h
             (xr, yr + h)
@@ -57,7 +57,7 @@ end
 
 Checks wheter give point `pos` is valid, i.e., if the distance to the nearest point of the rectangle `r` is greater or equal to the minimum distance `d_min`. 
 """
-function isvalid(r::Rectangle, pos::NTuple{2, Float64}, d_min)
+function isvalid(r::Rectangle, pos::NTuple{2, Float64}, d_min = 0)
     isinside(r, pos) && return false
     return distance(nearest(r, pos), pos) >= d_min
 end
