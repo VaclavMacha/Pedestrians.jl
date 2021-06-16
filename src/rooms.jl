@@ -4,6 +4,18 @@ struct Door
     width::Float64
 end
 
+function isinside(d::Door, pos::NTuple{2, Float64}, ylims, d_min = 0,)
+    (x, y) = pos
+    (xd, yd), w = d.pos, d.width
+
+    if xd <= x <= xd + w && max(yd - d_min, ylims[1]) <= y <= min(yd + d_min, ylims[2])
+        if min(distance(d.pos, pos), distance(d.pos .+ (w, 0), pos)) >= d_min
+            return true
+        end
+    end
+    return false
+end
+
 """
     nearest(d::Door, pos::NTuple{2, Float64}, d_min = 0)
 
@@ -56,4 +68,15 @@ Base.@kwdef struct Room
         6 => Checkpoint(6, (4.0, 2.4)),
         7 => Checkpoint(7, (4.0, 1.9)),
     )
+end
+
+function isvalid(r::Room, pos::NTuple{2, Float64}, d_min = 0)
+    w, h = r.width, r.height
+    for (~, d) in r.entrances
+        isinside(d, pos, (0, h), d_min) && return true
+    end
+    for (~, d) in r.exits
+        isinside(d, pos, (0, h), d_min) && return true
+    end
+    return d_min <= pos[1] <= w - d_min && d_min <= pos[2] <= h - d_min
 end
