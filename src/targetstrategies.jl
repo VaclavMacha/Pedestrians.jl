@@ -2,7 +2,7 @@ abstract type TargetStrategy end
 
 Base.@kwdef struct Nearest <: TargetStrategy
     p::Float64 = 0.5
-    dmin::Float64 = 1e-6
+    dmin::Float64 = 0
 end
 
 function find_target!(s::Nearest, p::Pedestrian, model)
