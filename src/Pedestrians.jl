@@ -24,10 +24,11 @@ Base.@kwdef mutable struct Pedestrian <: AbstractAgent
     # additional properties
     finished::Bool = false
     target::NTuple{2,Float64} = pos # target position
-    isexit::Bool = false   # true if target position represents exit
-    acc::Float64 = 0.5     # acceleration
-    radius::Float64 = 0.25 # pedestrian size
-    φ::Float64 = 3π/4      # maximum change of a pedestrian course
+    isexit::Bool = false       # true if target position represents exit
+    acc::Float64 = 0.5         # acceleration
+    radius_min::Float64 = 0.25 # physical pedestrian size
+    radius::Float64 = 0.5      # social pedestrian size
+    φ::Float64 = 3π/4          # maximum change of a pedestrian course
 end
 
 Pedestrian(id, pos; kwargs...) = Pedestrian(; id, pos, kwargs...)
