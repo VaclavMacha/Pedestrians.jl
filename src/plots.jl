@@ -1,7 +1,7 @@
 using .Plots
 using .Plots: Plot
 
-export makeplot, set_palette!, set_main_color!
+export makeplot, set_palette!, set_main_color!, default_palette
 
 # color definitions
 function default_palette()
