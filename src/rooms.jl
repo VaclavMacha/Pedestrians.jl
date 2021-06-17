@@ -1,5 +1,15 @@
+"""
+    RoomShape
+
+Abstract type, that represents room shape. Each subtype has to define method for `isvalid(s::RoomShape, pos::Point, r = 0)` function. 
+"""
 abstract type RoomShape end
 
+"""
+    RoomRectangle(width, height)
+
+Representation of the rectangle room of size (width, height) with origin in (0, 0)
+"""
 struct RoomRectangle{T<:Real} <: RoomShape
     width::T
     height::T
@@ -8,7 +18,7 @@ end
 """
     isvalid(s::RoomRectangle, pos::Point, r = 0)
 
-Checks wheter give point `pos` layes inside of the rectangle room. 
+Checks wheter give point `pos` lies inside of the rectangle room. 
 """
 function isvalid(s::RoomRectangle, pos::Point, r = 0)
     w, h = s.width, s.height
@@ -17,6 +27,18 @@ function isvalid(s::RoomRectangle, pos::Point, r = 0)
 end
 
 # Room type
+"""
+    Room
+
+Representation of the rectangle room of size (width, height) with origin in (0, 0)
+
+# Fields
+- shape::RoomShape
+- obstacles::Vector{<:Obstacle}
+- entrances::Vector{Door}
+- exits::Vector{Door}
+- checkpoints::Vector{<:Target}
+"""
 Base.@kwdef struct Room
     shape::RoomShape = RoomRectangle(6.0, 5.0)
     obstacles::Vector{<:Obstacle} = [
@@ -41,6 +63,11 @@ Base.@kwdef struct Room
     ]
 end
 
+"""
+    isvalid(room::Room, pos::Point, r = 0)
+
+Checks wheter give point `pos` is valid for given room configuration. 
+"""
 function isvalid(room::Room, pos::Point, r = 0)
     # checks wheter given position lies inside the room (with zero radius)
     isvalid(room.shape, pos, 0) || return false
