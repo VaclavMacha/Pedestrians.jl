@@ -1,9 +1,10 @@
 using .Plots
 using .Plots: Plot
 
-export makeplot, makeplot!
+export makeplot
 
-const COLORS = palette([
+# color definitions
+const PED_COLORS = palette([
     RGB(0.0000, 0.4470, 0.7410),
     RGB(0.8500, 0.3250, 0.0980),
     RGB(0.9290, 0.6940, 0.1250),
@@ -15,71 +16,199 @@ const COLORS = palette([
 
 const MAIN_COLOR = RGB(0.5586, 0.1211, 0.4688)
 
-getcolor(id) = COLORS[mod1(id, 7)]
+getcolor(id) = PED_COLORS[mod1(id, 7)]
 
-makeplot(obj; kwargs...) = makeplot!(plot(), obj; kwargs...)
-makeplot!(obj; kwargs...) = makeplot!(current(), obj; kwargs...)
-
-function makeplot!(
-    plt::Plot,
-    model::AgentBasedModel;
-    addview = false,
-    kwargs...
-)
-    title = get(kwargs, :title, "Simulation: $(model.timestrategy.iter)")
-    xlims = get(kwargs, :xlims, (-0.1, model.room.width + 0.1))
-    ylims = get(kwargs, :ylims, (-0.1, model.room.height + 0.1))
-
-    makeplot!(plt, model.room; title, xlims, ylims, kwargs...)
-    makeplot!(plt, collect(values(model.agents)); addview)
-    return plt
+# object shapes
+function rectangle(pos::Point, w, h)
+    x, y = pos
+    return Shape(x .+ [0, w, w, 0], y .+ [0, 0, h, h])
 end
 
-function makeplot!(
-    plt::Plot,
+function circle(pos::Point, r = 1; step = π/20)
+    x, y = pos
+    θ = range(-π, π; step)
+    return Shape(x .+ r*sin.(θ), y .+ r*cos.(θ))
+end
+
+function circle_section(pos::Point, r = 1, θ0  = 0, θmax = 2π; step = π/20)
+    x, y = pos
+    coors = euclidian.(r, θ0 .+ range(-θmax/2, θmax/2; step), Ref(pos))
+
+    return Shape(vcat(x, first.(coors)), vcat(y, last.(coors)))
+end
+
+# recipes
+@recipe function f(s::RoomRectangle; px_meter = 100)
+    w, h = s.width, s.height
+
+    # set plot style
+    seriestype  :=  :shape
+    fillalpha := 0
+    label := ""
+    linecolor --> MAIN_COLOR
+    linewidth --> 2
+    aspect_ratio --> :equal
+    legend --> false
+    axis --> nothing
+    framestyle --> :none
+    xlims --> (- 0.01*w, 1.01*w)
+    xlims --> (- 0.01*h, 1.01*h)
+    size --> px_meter .* (w, h)
+
+    # remove kwargs
+    delete!(plotattributes, :px_meter)
+
+    return rectangle((0, 0), w, h)
+end
+
+roomlims(s::RoomRectangle) = (s.width, s.height)
+
+@recipe f(s::Rectangle) = [s]
+@recipe function f(s::Vector{<:Rectangle})
+    pos = getproperty.(s, :pos)
+    w =getproperty.(s, :width)
+    h = getproperty.(s, :height)
+
+    # set plot style
+    seriestype  := :shape
+    label := ""
+    linecolor --> MAIN_COLOR
+    fillcolor --> MAIN_COLOR
+
+    return rectangle.(pos, w, h)
+end
+
+@recipe function f(d::Door; add_checkpoints = false, radius = 0.1)
+    pos = [d.pos, d.pos .+ (d.width, 0)]
+    x, y = first.(pos), last.(pos)
+
+    if add_checkpoints
+        pos = [d.pos .+ (radius, 0), d.pos .+ (d.width - radius, 0)]
+        x = hcat(x, first.(pos))
+        y = hcat(y, last.(pos))
+    end
+
+    # set plot style
+    seriestype  := :path
+    label := ""
+    marker := add_checkpoints ? [:square :vline] : :square
+    linecolor := add_checkpoints ? [:white :gray] : :white
+    linewidth := add_checkpoints ? [4 1] : 4
+    markercolor := add_checkpoints ? [MAIN_COLOR :gray] : MAIN_COLOR
+    markerstrokecolor := add_checkpoints ? [MAIN_COLOR :gray] : MAIN_COLOR
+    markersize := add_checkpoints ? [4 6] : 4
+
+    # remove kwargs
+    delete!(plotattributes, :add_checkpoints)
+    delete!(plotattributes, :radius)
+
+    return x, y
+end
+
+@recipe f(c::Checkpoint) = [c]
+@recipe function f(cs::Vector{<:Checkpoint})
+    pos = getproperty.(cs, :pos)
+
+    # set plot style
+    seriestype  := :scatter
+    label --> ""
+    marker --> :x
+    markersize --> 6
+    markercolor --> :gray
+
+    return first.(pos), last.(pos)
+end
+
+@recipe f(p::Pedestrian) = [p]
+@recipe f(d::Dict{Int, Pedestrian}) = collect(values(d))
+@recipe function f(ps::Vector{<:Pedestrian}; add_view = false, add_personal = true)
+    k = length(ps)
+    pos = getproperty.(ps, :pos)
+    cls0 = getcolor.(getproperty.(ps, :id))
+
+    # physical size
+    shps = circle.(pos, getproperty.(ps, :radius_min))
+    cls = cls0
+    ops = ones(k)
+    lnstyle = fill(:solid, k)
+    lnalpha = ones(k)
+
+    # personal space
+    if add_personal
+        append!(shps, circle.(pos, getproperty.(ps, :radius)))
+        append!(cls, cls0)
+        append!(ops, zeros(k))
+        append!(lnstyle, fill(:dash, k))
+        append!(lnalpha, ones(k))
+    end
+
+    # current view
+    if add_view
+        vel = getproperty.(ps, :vel)
+        rv = norm.(vel, 2)
+        θ0 = direction_angle.(vel)
+        θmax = getproperty.(ps, :φ)
+
+        append!(shps, circle_section.(pos, rv, θ0, θmax))
+        append!(cls, cls0)
+        append!(ops, 0.2*ones(k))
+        append!(lnstyle, fill(:solid, k))
+        append!(lnalpha, zeros(k))
+
+    end
+
+    # set plot style
+    seriestype  := :shape
+    label --> ""
+    fillcolor --> permutedims(cls)
+    linecolor --> permutedims(cls)
+    linestyle --> permutedims(lnstyle)
+    linealpha --> permutedims(lnalpha)
+    fillalpha --> permutedims(ops)
+
+    # remove kwargs
+    delete!(plotattributes, :add_view)
+    delete!(plotattributes, :add_personal)
+
+    return shps
+end
+
+# room plot
+function makeplot(
     room::Room;
-    q = 100,
-    addcheckpoints = true,
-    addvalid = false,
-    r = 0.25,
-    k = 500,
+    add_checkpoints = false,
+    add_valid = false,
+    k_valid = 300,
+    radius = 0.1,
     kwargs...
 )
-    
-    plot!(
-        plt;
-        label = "",
-        ratio = :equal,
-        legend = false,
-        axis = nothing,
-        border = :none,
-        kwargs...
-        )
+    # basic setup
+    plt = plot(; kwargs...)
 
-    # plot wall
-    makeplot!(plt, room.shape, q)
+    # plot walls
+    plot!(plt, room.shape)
 
     # add doors
     for d in vcat(room.entrances, room.exits)
-        makeplot!(plt, d, addcheckpoints, r)
+        plot!(plt, d; add_checkpoints, radius)
+    end
+
+    # add checkpoints
+    if add_checkpoints
+        plot!(plt, room.checkpoints)
     end
 
     # add obstacles
     for o in room.obstacles
-        makeplot!(plt, o)
+        plot!(plt, o)
     end
 
-    # add checkpoints
-    if addcheckpoints
-        makeplot!(plt, room.checkpoints)
-    end
-
-    if addvalid
-        xs, ys = computerange(room.shape, k)
-        heatmap!(
-            xs,
-            ys,
-            (x, y) -> isvalid(room, (x, y), r);
+    # add valid positions
+    if add_valid
+        lims = roomlims(room.shape)
+        xs = range(0, lims[1]; length = k_valid)
+        ys = range(0, lims[2]; length = k_valid)
+        heatmap!(plt, xs, ys, (x, y) -> isvalid(room, (x, y), radius);
             color = [MAIN_COLOR, :white],
             opacity = 0.2,
             cbar = false,
@@ -88,111 +217,15 @@ function makeplot!(
     return plt
 end
 
-function computerange(s::RoomRectangle, k)
-    return (range(0, s.width; length = k), range(0, s.height; length = k))
-end
+# model plot
+function makeplot(
+    model::AgentBasedModel;
+    add_view = false,
+    add_personal = true,
+    kwargs...
+)   
 
-function makeplot!(plt, s::RoomRectangle, q)
-    w, h = s.width, s.height
-
-    plot!(
-        plt,
-        [0, w, w, 0, 0],
-        [0, 0, h, h, 0];
-        linecolor = MAIN_COLOR,
-        linewidth = 2,
-        size = (q*w, q*h),
-    )
-    return plt
-end
-
-function makeplot!(plt, d::Door, addcheckpoints, r)
-    pos = [d.pos, d.pos .+ (d.width, 0)]
-    plot!(
-        plt,
-        first.(pos),
-        last.(pos);
-        label = "",
-        linecolor = :white,
-        linewidth = 4,
-        marker = :square,
-        markercolor = MAIN_COLOR,
-        markerstrokecolor = MAIN_COLOR,
-        markersize = 4,
-    )
-    if addcheckpoints
-        pos = [d.pos .+ (r, 0), d.pos .+ (d.width - r, 0)]
-        plot!(
-            plt,
-            first.(pos),
-            last.(pos);
-            label = "",
-            marker = :vline,
-            linecolor = :gray,
-            markercolor = :gray,
-            markersize = 6,
-        )
-    end
-    return plt
-end
-
-function makeplot!(plt, o::Rectangle)
-    (x, y), w, h = o.pos, o.width, o.height 
-    plot!(
-        plt,
-        Shape(x .+ [0,w,w,0], y .+ [0,0,h,h]);
-        label = "",
-        fillcolor = MAIN_COLOR,
-        linecolor = MAIN_COLOR,
-    )
-    return plt
-end
-
-function makeplot!(plt, ts::Vector{<:Checkpoint})
-    pos = getproperty.(ts, :pos)
-    scatter!(
-        plt,
-        first.(pos),
-        last.(pos);
-        label = "",
-        marker = :x,
-        markercolor = :gray,
-        markersize = 6,
-    )
-    return plt
-end
-
-function makeplot!(plt, ps::Vector{<:Pedestrian}; addview = false)
-    if addview
-        for p in ps
-            norm(p.vel) == 0 && continue
-            r = 0.5
-            ϕ = direction_angle(p.vel)
-            pos = vcat(
-                p.pos,
-                euclidian.(r, ϕ .+ range(-p.φ/2, p.φ/2; length = 10), Ref(p.pos)),
-            )
-            plot!(
-                plt,
-                Shape(first.(pos), last.(pos));
-                label = "",
-                color = getcolor.(p.id),
-                fillalpha = 0.2,
-                linealpha = 0,
-            )
-        end
-    end
-
-    pos = getproperty.(ps, :pos)
-    cls = getcolor.(getproperty.(ps, :id))
-    scatter!(
-        plt,
-        first.(pos),
-        last.(pos);
-        label = "",
-        markercolor = cls,
-        markerstrokecolor = cls,
-        markersize = 8,
-    )
+    plt = makeplot(model.room; kwargs...)
+    plot!(plt, model.agents; add_view, add_personal)
     return plt
 end
