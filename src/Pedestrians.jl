@@ -38,9 +38,9 @@ include("utilities.jl")
 include("targets.jl")
 include("obstacles.jl")
 include("rooms.jl")
-include("timestrategies.jl")
-include("targetstrategies.jl")
-include("interactions.jl")
+include("strategies_time.jl")
+include("strategies_target.jl")
+include("strategies_move.jl")
 
 Base.@kwdef struct Parameters
     timestrategy::TimeStrategy = Basic()

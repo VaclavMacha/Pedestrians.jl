@@ -5,6 +5,18 @@ Base.@kwdef struct Nearest <: TargetStrategy
     dmin::Float64 = 0
 end
 
+function find_target!(p::Pedestrian, model)
+    #  find target based on selected strategy 
+    find_target!(model.strategy, p, model)
+
+    # checks wheter pedestrian is in exit
+    if p.isexit && p.pos == p.target
+        p.vel = (0., 0.)
+        p.finished = true
+        return
+    end
+end
+
 function find_target!(s::Nearest, p::Pedestrian, model)
     pos = p.pos
     dist = Inf
