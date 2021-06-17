@@ -1,22 +1,40 @@
 using .Plots
 using .Plots: Plot
 
-export makeplot
+export makeplot, set_palette!, set_main_color!
 
 # color definitions
-const PED_COLORS = palette([
-    RGB(0.0000, 0.4470, 0.7410),
-    RGB(0.8500, 0.3250, 0.0980),
-    RGB(0.9290, 0.6940, 0.1250),
-    RGB(0.4940, 0.1840, 0.5560),
-    RGB(0.4660, 0.6740, 0.1880),
-    RGB(0.3010, 0.7450, 0.9330),
-    RGB(0.6350, 0.0780, 0.1840),
-])
+function default_palette()
+    return palette([
+        RGB(0.5586, 0.1211, 0.4688),
+        RGB(0.0000, 0.4470, 0.7410),
+        RGB(0.8500, 0.3250, 0.0980),
+        RGB(0.9290, 0.6940, 0.1250),
+        RGB(0.4660, 0.6740, 0.1880),
+        RGB(0.3010, 0.7450, 0.9330),
+        RGB(0.6350, 0.0780, 0.1840),
+    ])
+end
 
-const MAIN_COLOR = RGB(0.5586, 0.1211, 0.4688)
+const PALETTE = Ref{ColorPalette}(default_palette())
+const MAIN_COLOR = Ref{RGB}(default_palette()[1])
 
-getcolor(id) = PED_COLORS[mod1(id, 7)]
+function set_main_color!(c)
+    MAIN_COLOR[] = parse(Colorant, c)
+end
+
+function set_palette!(pal; set_main = true)
+    pal = palette(pal)
+    PALETTE[] = pal
+    set_main && set_main_color!(pal[1])
+    return 
+end
+
+function get_color(id)
+    pal = PALETTE[]
+    return pal[mod1(id, length(pal))]
+end
+get_main_color() = MAIN_COLOR[]
 
 # object shapes
 function rectangle(pos::Point, w, h)
@@ -45,7 +63,7 @@ end
     seriestype  :=  :shape
     fillalpha := 0
     label := ""
-    linecolor --> MAIN_COLOR
+    linecolor --> get_main_color()
     linewidth --> 2
     aspect_ratio --> :equal
     legend --> false
@@ -72,8 +90,8 @@ roomlims(s::RoomRectangle) = (s.width, s.height)
     # set plot style
     seriestype  := :shape
     label := ""
-    linecolor --> MAIN_COLOR
-    fillcolor --> MAIN_COLOR
+    linecolor --> get_main_color()
+    fillcolor --> get_main_color()
 
     return rectangle.(pos, w, h)
 end
@@ -94,8 +112,8 @@ end
     marker := add_checkpoints ? [:square :vline] : :square
     linecolor := add_checkpoints ? [:white :gray] : :white
     linewidth := add_checkpoints ? [4 1] : 4
-    markercolor := add_checkpoints ? [MAIN_COLOR :gray] : MAIN_COLOR
-    markerstrokecolor := add_checkpoints ? [MAIN_COLOR :gray] : MAIN_COLOR
+    markercolor := add_checkpoints ? [get_main_color() :gray] : get_main_color()
+    markerstrokecolor := add_checkpoints ? [get_main_color() :gray] : get_main_color()
     markersize := add_checkpoints ? [4 6] : 4
 
     # remove kwargs
@@ -124,7 +142,7 @@ end
 @recipe function f(ps::Vector{<:Pedestrian}; add_view = false, add_personal = true)
     k = length(ps)
     pos = getproperty.(ps, :pos)
-    cls0 = getcolor.(getproperty.(ps, :id))
+    cls0 = get_color.(getproperty.(ps, :id))
 
     # physical size
     shps = circle.(pos, getproperty.(ps, :radius_min))
@@ -209,7 +227,7 @@ function makeplot(
         xs = range(0, lims[1]; length = k_valid)
         ys = range(0, lims[2]; length = k_valid)
         heatmap!(plt, xs, ys, (x, y) -> isvalid(room, (x, y), radius);
-            color = [MAIN_COLOR, :white],
+            color = [get_main_color(), :white],
             opacity = 0.2,
             cbar = false,
         )
