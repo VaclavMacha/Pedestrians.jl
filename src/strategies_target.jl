@@ -35,7 +35,7 @@ function find_target!(s::Nearest, p::Pedestrian, model)
 
     # find nearest exit
     for t in values(model.room.exits)
-        t_pos = nearest(t, p.pos, model.τs)
+        t_pos = nearest(t, p.pos, p.radius)
         p.pos[2] > t_pos[2] || continue
         
         d = distance(p.pos, t_pos)
