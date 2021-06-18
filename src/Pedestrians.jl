@@ -48,7 +48,7 @@ Base.@kwdef struct Parameters
     room::Room = Room()
     w::Float64 = 0         # minimum distance from any obstacle
     s::Float64 = 1         # initial size of a pedestrian
-    Δs::Float64 = 0        # step to reduce the pedestrian size
+    Δs::Float64 = 0.075        # step to reduce the pedestrian size
     τs::Float64 = 0.25     # minimum (physical) pedestrian size
     v_opt::Float64 = 1.3   # pedestrian optimum speed
     ν::Float64 = π/4       # pedestrian field of vision
