@@ -164,9 +164,9 @@ function pedestrian_step!(pars::GridSearch, p, model)
     p.vel = min(norm(p.vel, 2) + p.acc * model.Δt, pars.v_opt) .* dir
 
     # find available positions
-    # if norm(vel ,2) == 0 && p.isexit
-    #     p.φ = pars.φmax
-    # end
+    if norm(vel ,2) == 0 && p.isexit
+        p.φ = pars.φmax
+    end
     φ0 = direction_angle(p.vel)
     d_max = norm(p.vel, 2)*model.Δt
     pos = positions_grid(model, φ0, pars.φmax, pars.Δφ, p.pos, p.radius, pars.Δr, p.rlims, d_max, pars.d_k)
