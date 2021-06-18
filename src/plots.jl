@@ -62,15 +62,15 @@ end
     # set plot style
     seriestype  :=  :shape
     fillalpha := 0
+    xlims := (- 0.01*w, 1.01*w)
+    ylims := (- 0.01*h, 1.01*h)
+    aspect_ratio := :equal
     label := ""
     linecolor --> get_main_color()
     linewidth --> 2
-    aspect_ratio --> :equal
     legend --> false
     axis --> nothing
     framestyle --> :none
-    xlims --> (- 0.01*w, 1.01*w)
-    xlims --> (- 0.01*h, 1.01*h)
     size --> px_meter .* (w, h)
 
     # remove kwargs
@@ -212,7 +212,7 @@ function makeplot(
     end
 
     # add checkpoints
-    if add_checkpoints
+    if add_checkpoints && !isempty(room.checkpoints)
         plot!(plt, room.checkpoints)
     end
 
@@ -244,6 +244,8 @@ function makeplot(
 )   
 
     plt = makeplot(model.room; kwargs...)
-    plot!(plt, model.agents; add_view, add_personal)
+    if !isempty(model.agents)
+        plot!(plt, model.agents; add_view, add_personal)
+    end
     return plt
 end
