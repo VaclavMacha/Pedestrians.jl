@@ -7,8 +7,14 @@ Abstract type that represents all time strategies for simulations. Each concrete
 """
 abstract type TimeStrategy end
 
+function update_time!(model)
+    time = model.time_strategy
+    time.iter += 1
+end
+
 add_pedestrian!(model) = add_pedestrian!(model.time_strategy, model)
 
+# bais time strategy
 Base.@kwdef mutable struct Basic <: TimeStrategy
     iter::Int = 0
     counter::Int = 0
@@ -27,17 +33,4 @@ function add_pedestrian!(time::Basic, model)
             add_agent!(pos, model; vel)
         end
     end
-end
-
-function simulation_step!(model)
-    genocide!(model, hasfinished) # remove all agents that left the room
-    add_pedestrian!(model) # add new pedestrians
-    step!(model, pedestrian_step!) # move pedestrians
-    update_time!(model)
-    return
-end
-
-function update_time!(model)
-    time = model.time_strategy
-    time.iter += 1
 end

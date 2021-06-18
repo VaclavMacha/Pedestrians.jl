@@ -41,26 +41,7 @@ include("rooms.jl")
 include("strategies_time.jl")
 include("strategies_target.jl")
 include("strategies_move.jl")
-
-Base.@kwdef struct Parameters
-    room::Room = Room()
-    target_strategy::TargetStrategy = Nearest()
-    move_strategy::MoveStrategy = JancaMove()
-    time_strategy::TimeStrategy = Basic()
-
-    Δt::Float64 = 0.05     # time step
-    n::Float64 = 300       # maximal number of pedestrians
-end
-
-build_model(; spacing = 0.01, kwargs...) = build_model(Parameters(; kwargs...); spacing)
-
-function build_model(pars::Parameters; scheduler = random_activation, spacing = 0.01)
-    r = pars.room.shape
-    space2d = ContinuousSpace((r.width, r.height), spacing; periodic = false)
-    model = ABM(Pedestrian, space2d; scheduler, properties = pars)
-    model.maxid[] = model.time_strategy.counter
-    return model
-end
+include("simulation.jl")
 
 function __init__()
     @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include("plots.jl")
