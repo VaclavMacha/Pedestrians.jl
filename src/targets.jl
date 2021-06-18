@@ -32,7 +32,7 @@ Returns the nearest point from the door `d` to the point `pos`. Argument `r` spe
 """
 function nearest(d::Door, pos::Point, r = 0)
     (xd, yd), w = d.pos, d.width
-    x = pos[2]
+    x = pos[1]
     return if x < xd + r
         (xd + r, yd)
     elseif x > xd + w - r
