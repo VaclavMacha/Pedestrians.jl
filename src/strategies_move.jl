@@ -1,10 +1,5 @@
 function isvalid(p1::Pedestrian, p2::Pedestrian, pos)
-    return norm(pos .- p2.pos, 2) > p1.radius + p2.radius
-end
-
-function reduce_size!(p::Pedestrian, model)
-    p.radius = max(p.radius - model.Δs, p.radius_min)
-    return
+    return distance(pos, p2.pos) >= p1.radius + p2.radius
 end
 
 function move_pedestrian!(p, model)
@@ -19,24 +14,42 @@ function move_pedestrian!(p, model)
     end
 end
 
-function blind_velocity!(p::Pedestrian, model)
-    find_target!(p, model)
-    p.finished && return 
-
-    # compute velocity
-    dir = direction(p.pos, p.target)
-    p.vel = min(norm(p.vel, 2) + p.acc * model.Δt, model.v_opt) .* dir
-    return
-end
-
-function positions_shorten(p, model, r = p.radius, r_max = norm(p.vel, 2)*model.Δt)
-    φ0, origin = direction_angle(p.vel), p.pos
+function positions_turn(
+    model,
+    φ0::Real, # direction angle
+    φmax::Real,
+    Δφ::Real, 
+    origin::Point,
+    r::Real,
+    d_max::Real,
+)
 
     # compute coordinates
     pos = Point[]
-    for ri in range(0, r_max; length = model.kr)
-        ri == 0 && continue
-        posi = euclidian(ri, φ0, origin)
+    for φi in 0:Δφ:φmax/2
+            j = rand([-1, 1])
+            posi = euclidian(d_max, φ0 + j*φi, origin)
+            isvalid(model.room, posi, r) && push!(pos, posi)
+            φi == 0 && continue # add 0 angle only once
+            posi = euclidian(d_max, φ0 - j*φi, origin)
+            isvalid(model.room, posi, r) && push!(pos, posi)
+        end
+    return pos
+end
+
+function positions_shorten(
+    model, 
+    φ0::Real, # direction angle
+    origin::Point,
+    r::Real,
+    d_max::Real,
+    d_k::Int,
+)
+
+    pos = Point[]
+    for di in range(0, d_max; length = d_k)
+        di == 0 && continue
+        posi = euclidian(di, φ0, origin)
         if isvalid(model.room, posi, r)
             push!(pos, posi)
         else
@@ -46,42 +59,55 @@ function positions_shorten(p, model, r = p.radius, r_max = norm(p.vel, 2)*model.
     return reverse(pos)
 end
 
-function positions_turn(p, model, r = p.radius, r_max = norm(p.vel, 2)*model.Δt)
-    φ, φ0, origin = p.φ, direction_angle(p.vel), p.pos
+# move strategies
+abstract type MoveStrategy end
 
-    # compute coordinates
-    pos = Point[]
-    for φi in 0:model.Δφ:φ/2
-            j = rand([-1, 1])
-            posi = euclidian(r_max, φ0 + j*φi, origin)
-            isvalid(model.room, posi, r) && push!(pos, posi)
-            φi == 0 && continue # add 0 angle only once
-            posi = euclidian(r_max, φ0 - j*φi, origin)
-            isvalid(model.room, posi, r) && push!(pos, posi)
-        end
-    return pos
+pedestrian_step!(p, model) = pedestrian_step!(model.move_strategy, p, model)
+
+Base.@kwdef struct JancaMove{T<:AbstractFloat} <: MoveStrategy
+    # blind velocity
+    acc::T = 0.5     # pedestrian acceleration
+    v_opt::T = 1.3 # pedestrian optimum speed
+
+    # Course change
+    φ::T = 3π/4  # maximum change of a pedestrian course
+    φmax::T = 2π # maximum change of a pedestrian course if norm(vel) == 0
+    Δφ::T = 0.1  # step
+
+    # shortening
+    d_k::Int64 = 10 # number of shortening steps
+
+    # size reduction
+    Δr::T = 0.075 # number of shortening steps
+
+    # crisis
+    acc_crisis::T = 60.0 # acceleration if an arch occurs
+    ϑ::T = π/32      # field of vision if an arch occurs
 end
 
-function pedestrian_step!(p, model)
+function pedestrian_step!(pars::JancaMove, p, model)
     # update max view angle ???
-    p.φ = norm(p.vel ,2) <= 1e-10 ? model.φmax : model.φ
-    p.acc = norm(p.vel ,2) <= 1e-10 ? model.a_crisis : model.a
+    p.φ = norm(p.vel ,2) <= 1e-10 ? pars.φmax : pars.φ
+    p.acc = norm(p.vel ,2) <= 1e-10 ? pars.acc_crisis : pars.acc
     vel = p.vel
 
+    # find targets
+    find_target!(p, model)
+    p.finished && return 
+
     # blind velocity
-    blind_velocity!(p, model)
-    p.finished && return
+    dir = direction(p.pos, p.target)
+    p.vel = min(norm(p.vel, 2) + p.acc * model.Δt, pars.v_opt) .* dir
 
     # find available positions
-    r = p.radius
-    r_max = norm(p.vel, 2)*model.Δt
+    φ0 = direction_angle(p.vel)
+    d_max = norm(p.vel, 2)*model.Δt
     pos = vcat(
-        positions_turn(p, model, r, r_max),
-        positions_shorten(p, model, r, r_max),
+        positions_turn(model, φ0, pars.φmax, pars.Δφ, p.pos, p.radius, d_max),
+        positions_shorten(model, φ0, p.pos, p.radius, d_max, pars.d_k),
     )
-    
-    # checks colisionn with other pedestrians
-    for p2 in nearby_agents(p, model, 1.1*r_max)
+
+    for p2 in nearby_agents(p, model, 1.1*d_max)
         filter!(x -> Pedestrians.isvalid(p, p2, x), pos)
         isempty(pos) && break
     end
@@ -92,7 +118,7 @@ function pedestrian_step!(p, model)
     else
         # reduce pedestrian size
         if p.radius > p.radius_min
-            reduce_size!(p, model)
+            p.radius = max(p.radius - pars.Δr, p.radius_min)
         else
             if norm(vel, 2) == 0
 

@@ -6,8 +6,8 @@ Base.@kwdef struct Nearest <: TargetStrategy
 end
 
 function find_target!(p::Pedestrian, model)
-    #  find target based on selected strategy 
-    find_target!(model.strategy, p, model)
+    #  find target based on selected target strategy 
+    find_target!(model.target_strategy, p, model)
 
     # checks wheter pedestrian is in exit
     if p.isexit && p.pos == p.target
