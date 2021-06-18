@@ -46,9 +46,3 @@ end
 Computes polar coordinates from the given 2D euclidian coordinates `(x, y)`.
 """
 polar(x::Real, y::Real) = (hypot(x, y), atan(y, x))
-
-function clip(pos::Point, model)
-    x, y = pos
-    w, h = model.room.shape.width, model.room.shape.height
-    return (min(x, prevfloat(w)), min(y, prevfloat(h)))
-end

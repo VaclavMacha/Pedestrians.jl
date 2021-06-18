@@ -1,21 +1,3 @@
-function isvalid(p1::Pedestrian, p2::Pedestrian, pos, radius = p1.radius)
-    return distance(pos, p2.pos) >= radius + p2.radius
-end
-
-function move_pedestrian!(p, model)
-    p.finished && kill_agent!(p, model)
-
-    Δt = model.Δt
-    d = distance(p.pos, p.target)
-    vn = norm(p.vel, 2)
-    if p.isexit && vn*Δt > d
-        p.finished = true
-        kill_agent!(p, model)
-    else
-        move_agent!(p, model, Δt)
-    end
-end
-
 function positions_turn(
     model,
     φ0::Real, # direction angle
@@ -61,11 +43,6 @@ function positions_shorten(
     return reverse(pos)
 end
 
-# move strategies
-abstract type MoveStrategy end
-
-pedestrian_step!(p, model) = pedestrian_step!(model.move_strategy, p, model)
-
 # Janca Move
 Base.@kwdef struct JancaMove{T<:AbstractFloat} <: MoveStrategy
     # blind velocity
@@ -88,15 +65,15 @@ Base.@kwdef struct JancaMove{T<:AbstractFloat} <: MoveStrategy
     ϑ::T = π/32      # field of vision if an arch occurs
 end
 
-function pedestrian_step!(pars::JancaMove, p, model)
+function pedestrian_step!(pars::JancaMove, model, p)
     # update max view angle ???
     vel = p.vel
     p.acc = norm(vel, 2) == 0 ? pars.acc_crisis : pars.acc
     p.φ = pars.φ
     
     # find targets
-    find_target!(p, model)
-    p.finished && move_pedestrian!(p, model)
+    find_target!(model, p)
+    p.finished && move_pedestrian!(model, p)
 
     # blind velocity
     dir = direction(p.pos, p.target)
@@ -113,10 +90,10 @@ function pedestrian_step!(pars::JancaMove, p, model)
         positions_shorten(model, φ0, p.pos, p.radius, d_max, pars.d_k),
     )
 
-    for p2 in allagents(model)
+    for p2 in allpedestrians(model)
         p.id == p2.id && continue
         distance(p.pos, p2.pos) - (p.radius + p2.radius) >= d_max  && continue
-        filter!(x -> isvalid(p, p2, x), pos)
+        filter!(x -> isvalid(p2, x, p.radius), pos)
         isempty(pos) && break
     end
 
@@ -130,7 +107,7 @@ function pedestrian_step!(pars::JancaMove, p, model)
         end
         p.vel = (0, 0)
     end
-    move_pedestrian!(p, model)
+    move_pedestrian!(model, p)
     return
 end
 
@@ -151,13 +128,13 @@ Base.@kwdef struct GridSearch{T<:AbstractFloat} <: MoveStrategy
     Δr::T = 0.05 # number of shortening steps
 end
 
-function pedestrian_step!(pars::GridSearch, p, model)
+function pedestrian_step!(pars::GridSearch, model, p)
     vel = p.vel
     p.φ = pars.φ
     
     # find targets
-    find_target!(p, model)
-    p.finished && move_pedestrian!(p, model)
+    find_target!(model, p)
+    p.finished && move_pedestrian!(model, p)
 
     # blind velocity
     dir = direction(p.pos, p.target)
@@ -172,10 +149,10 @@ function pedestrian_step!(pars::GridSearch, p, model)
     pos = positions_grid(model, φ0, pars.φmax, pars.Δφ, p.pos, p.radius, pars.Δr, p.rlims, d_max, pars.d_k)
 
 
-    for p2 in allagents(model)
+    for p2 in allpedestrians(model)
         p.id == p2.id && continue
         distance(p.pos, p2.pos) - (p.radius + p2.radius) >= d_max  && continue
-        filter!(x -> isvalid(p, p2, x[1], x[2]), pos)
+        filter!(x -> isvalid(p2, x[1], x[2]), pos)
         isempty(pos) && break
     end
 
@@ -186,7 +163,7 @@ function pedestrian_step!(pars::GridSearch, p, model)
     else
         p.vel = (0, 0)
     end
-    move_pedestrian!(p, model)
+    move_pedestrian!(model, p)
     return
 end
 

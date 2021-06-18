@@ -229,15 +229,15 @@ end
 
 # model plot
 function makeplot(
-    model::AgentBasedModel;
+    model::Model;
     add_view = false,
     add_personal = true,
     kwargs...
 )   
 
     plt = makeplot(model.room; kwargs...)
-    if !isempty(model.agents)
-        plot!(plt, model.agents; add_view, add_personal)
+    if !isempty(model.pedestrians)
+        plot!(plt, model.pedestrians; add_view, add_personal)
     end
     return plt
 end
