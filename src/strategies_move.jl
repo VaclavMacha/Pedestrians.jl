@@ -3,6 +3,8 @@ function isvalid(p1::Pedestrian, p2::Pedestrian, pos)
 end
 
 function move_pedestrian!(p, model)
+    p.finished && kill_agent!(p, model)
+
     Δt = model.Δt
     d = distance(p.pos, p.target)
     vn = norm(p.vel, 2)
@@ -87,19 +89,22 @@ end
 
 function pedestrian_step!(pars::JancaMove, p, model)
     # update max view angle ???
-    p.φ = norm(p.vel ,2) <= 1e-10 ? pars.φmax : pars.φ
-    p.acc = norm(p.vel ,2) <= 1e-10 ? pars.acc_crisis : pars.acc
     vel = p.vel
-
+    p.acc = norm(vel, 2) == 0 ? pars.acc_crisis : pars.acc
+    p.φ = pars.φ
+    
     # find targets
     find_target!(p, model)
-    p.finished && return 
+    p.finished && move_pedestrian!(p, model)
 
     # blind velocity
     dir = direction(p.pos, p.target)
     p.vel = min(norm(p.vel, 2) + p.acc * model.Δt, pars.v_opt) .* dir
 
     # find available positions
+    if norm(vel ,2) == 0 && p.isexit
+        p.φ = pars.φmax
+    end
     φ0 = direction_angle(p.vel)
     d_max = norm(p.vel, 2)*model.Δt
     pos = vcat(
@@ -107,8 +112,10 @@ function pedestrian_step!(pars::JancaMove, p, model)
         positions_shorten(model, φ0, p.pos, p.radius, d_max, pars.d_k),
     )
 
-    for p2 in nearby_agents(p, model, 1.1*d_max)
-        filter!(x -> Pedestrians.isvalid(p, p2, x), pos)
+    for p2 in allagents(model)
+        p.id == p2.id && continue
+        distance(p.pos, p2.pos) - (p.radius + p2.radius) >= d_max  && continue
+        filter!(x -> isvalid(p, p2, x), pos)
         isempty(pos) && break
     end
 
@@ -119,15 +126,8 @@ function pedestrian_step!(pars::JancaMove, p, model)
         # reduce pedestrian size
         if p.radius > p.radius_min
             p.radius = max(p.radius - pars.Δr, p.radius_min)
-        else
-            if norm(vel, 2) == 0
-
-            elseif norm(vel, 2) > 0 && norm(p.vel, 2) > 0
-
-            end
         end
         p.vel = (0, 0)
-        return
     end
     move_pedestrian!(p, model)
     return
