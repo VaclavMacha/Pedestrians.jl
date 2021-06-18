@@ -140,40 +140,13 @@ end
 @recipe f(p::Pedestrian) = [p]
 @recipe f(d::Dict{Int, Pedestrian}) = collect(values(d))
 @recipe function f(ps::Vector{<:Pedestrian}; add_view = false, add_personal = true)
-    k = length(ps)
-    pos = getproperty.(ps, :pos)
-    cls0 = get_color.(getproperty.(ps, :id))
 
-    # physical size
-    shps = circle.(pos, getproperty.(ps, :radius_min))
-    cls = cls0
-    ops = ones(k)
-    lnstyle = fill(:solid, k)
-    lnalpha = ones(k)
-
-    # personal space
-    if add_personal
-        append!(shps, circle.(pos, getproperty.(ps, :radius)))
-        append!(cls, cls0)
-        append!(ops, zeros(k))
-        append!(lnstyle, fill(:dash, k))
-        append!(lnalpha, ones(k))
-    end
-
-    # current view
-    if add_view
-        vel = getproperty.(ps, :vel)
-        rv = norm.(vel, 2)
-        θ0 = direction_angle.(vel)
-        θmax = getproperty.(ps, :φ)
-
-        append!(shps, circle_section.(pos, rv, θ0, θmax))
-        append!(cls, cls0)
-        append!(ops, 0.2*ones(k))
-        append!(lnstyle, fill(:solid, k))
-        append!(lnalpha, zeros(k))
-
-    end
+    props = extract_shapes.(ps; add_view, add_personal)
+    shps = reduce(vcat, getindex.(props, 1))
+    cls = reduce(vcat, getindex.(props, 2))
+    ops = reduce(vcat, getindex.(props, 3))
+    lnstyle = reduce(vcat, getindex.(props, 4))
+    lnalpha = reduce(vcat, getindex.(props, 5))
 
     # set plot style
     seriestype  := :shape
@@ -189,6 +162,25 @@ end
     delete!(plotattributes, :add_personal)
 
     return shps
+end
+
+function extract_shapes(p::Pedestrian; add_view = false, add_personal = true)
+    inds = [1]
+    shps = [circle(p.pos, p.radius_min)]
+    if add_personal
+        push!(shps, circle(p.pos, p.radius))
+        push!(inds, 2)
+    end
+    if add_view
+        push!(shps, circle_section(p.pos, norm(p.vel, 2), direction_angle(p.vel), p.φ))
+        push!(inds, 3)
+    end
+    
+    cls = fill(get_color(p.id), 3)[inds]
+    ops = [1, 0, 0.2][inds]
+    lnstyle = [:solid, :dash, :solid][inds]
+    lnalpha = [1, 1, 0][inds]
+    return shps, cls, ops, lnstyle, lnalpha
 end
 
 # room plot
