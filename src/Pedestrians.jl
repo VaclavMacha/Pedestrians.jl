@@ -8,7 +8,7 @@ using Requires
 export Pedestrian, Parameters
 export Obstacle, Rectangle, Circle
 export Room, Door, Checkpoint, Target
-export Basic, Nearest
+export Basic, Nearest, JanaMove, GridSearch
 
 export build_model, simulation_step!
 
@@ -24,11 +24,11 @@ Base.@kwdef mutable struct Pedestrian <: AbstractAgent
     # additional properties
     finished::Bool = false
     target::NTuple{2,Float64} = pos # target position
-    isexit::Bool = false       # true if target position represents exit
-    acc::Float64 = 0.5         # acceleration
-    radius_min::Float64 = 0.1 # physical pedestrian size
-    radius::Float64 = 0.25      # social pedestrian size
-    φ::Float64 = 3π/4          # maximum change of a pedestrian course
+    isexit::Bool = false      # true if target position represents exit
+    acc::Float64 = 0.5        # acceleration
+    radius::Float64 = 0.25    # social pedestrian size
+    rlims::NTuple{2,Float64} = (0.1, 0.25) # physical pedestrian size
+    φ::Float64 = 3π/4         # maximum change of a pedestrian course
 end
 
 Pedestrian(id, pos; kwargs...) = Pedestrian(; id, pos, kwargs...)

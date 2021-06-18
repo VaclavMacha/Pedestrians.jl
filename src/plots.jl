@@ -166,7 +166,7 @@ end
 
 function extract_shapes(p::Pedestrian; add_view = false, add_personal = true)
     inds = [1]
-    shps = [circle(p.pos, p.radius_min)]
+    shps = [circle(p.pos, p.rlims[1])]
     if add_personal
         push!(shps, circle(p.pos, p.radius))
         push!(inds, 2)
