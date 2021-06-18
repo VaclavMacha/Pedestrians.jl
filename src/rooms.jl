@@ -15,6 +15,11 @@ struct RoomRectangle{T<:Real} <: RoomShape
     height::T
 end
 
+function Base.show(io::IO, r::RoomRectangle)
+    print(io, "rectangle (width, height) = $(r.width)m x $(r.height)m")
+    return
+end
+
 """
     isvalid(s::RoomRectangle, pos::Point, r = 0)
 
@@ -61,6 +66,15 @@ Base.@kwdef struct Room
         Checkpoint((4.0, 2.4)),
         Checkpoint((4.0, 1.9)),
     ]
+end
+
+function Base.show(io::IO, r::Room)
+    println(io, "room: ", r.shape)
+    println(io, "   - checkpoints: ", length(r.checkpoints))
+    println(io, "   - obstacles: ", length(r.obstacles))
+    println(io, "   - entrances: ", length(r.entrances))
+    print(io,   "   - exits: ", length(r.exits))
+    return
 end
 
 """
