@@ -7,7 +7,7 @@ using Requires
 
 export Pedestrian, Parameters
 export Obstacle, Rectangle, Circle
-export Room, Door, Checkpoint
+export Room, Door, Checkpoint, Target
 export Basic, Nearest
 
 export build_model, simulation_step!
@@ -26,8 +26,8 @@ Base.@kwdef mutable struct Pedestrian <: AbstractAgent
     target::NTuple{2,Float64} = pos # target position
     isexit::Bool = false       # true if target position represents exit
     acc::Float64 = 0.5         # acceleration
-    radius_min::Float64 = 0.25 # physical pedestrian size
-    radius::Float64 = 0.5      # social pedestrian size
+    radius_min::Float64 = 0.1 # physical pedestrian size
+    radius::Float64 = 0.25      # social pedestrian size
     φ::Float64 = 3π/4          # maximum change of a pedestrian course
 end
 
@@ -72,7 +72,7 @@ end
 build_model(; spacing = 0.01, kwargs...) = build_model(Parameters(; kwargs...); spacing)
 
 function build_model(pars::Parameters; scheduler = random_activation, spacing = 0.01)
-    r = pars.room
+    r = pars.room.shape
     space2d = ContinuousSpace((r.width, r.height), spacing; periodic = false)
     model = ABM(Pedestrian, space2d; scheduler, properties = pars)
     model.maxid[] = model.timestrategy.counter
