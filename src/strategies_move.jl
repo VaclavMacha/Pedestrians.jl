@@ -69,7 +69,7 @@ function pedestrian_step!(pars::JancaMove, model, p)
     # update max view angle ???
     vel = p.vel
     p.acc = norm(vel, 2) == 0 ? pars.acc_crisis : pars.acc
-    p.φ = pars.φ
+    p.φ = norm(vel ,2) == 0 ? pars.φmax : pars.φ
     
     # find targets
     find_target!(model, p)
@@ -80,9 +80,6 @@ function pedestrian_step!(pars::JancaMove, model, p)
     p.vel = min(norm(p.vel, 2) + p.acc * model.Δt, pars.v_opt) .* dir
 
     # find available positions
-    if norm(vel ,2) == 0 && p.isexit
-        p.φ = pars.φmax
-    end
     φ0 = direction_angle(p.vel)
     d_max = norm(p.vel, 2)*model.Δt
     pos = vcat(
