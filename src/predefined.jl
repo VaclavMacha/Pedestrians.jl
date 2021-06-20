@@ -2,11 +2,11 @@ function Room1(
     shape = RoomRectangle(6, 5),
     obstacles = [Rectangle((2.4, 1.9), 1.2, 0.5)],
     entrances = [
-        XDoor((1.05, 5.0), 0.6),
-        XDoor((2.7, 5.0), 0.6),
-        XDoor((4.35, 5.0), 0.6),
+        HDoor((1.05, 5.0), 0.6),
+        HDoor((2.7, 5.0), 0.6),
+        HDoor((4.35, 5.0), 0.6),
     ],
-    exits = [XDoor((2.7, 0.0), 0.6)],
+    exits = [HDoor((2.7, 0.0), 0.6)],
     checkpoints = [
         Checkpoint((2.0, 4.0)),
         Checkpoint((3.0, 4.0)),
@@ -25,18 +25,17 @@ function Room2(
     shape = RoomRectangle(6, 5),
     obstacles = [Rectangle((2.4, 1.9), 1.2, 0.5)],
     entrances = [
-        XDoor((1.05, 5.0), 0.6),
-        XDoor((2.7, 5.0), 0.6),
-        XDoor((4.35, 5.0), 0.6),
+        HDoor((1.05, 5.0), 0.6),
+        HDoor((2.7, 5.0), 0.6),
+        HDoor((4.35, 5.0), 0.6),
     ],
-    exits = [XDoor((2.7, 0.0), 0.6)],
+    exits = [HDoor((2.7, 0.0), 0.6)],
     checkpoints = [
-        CheckpointSpace((1.875, 4.0), 0.6),
-        CheckpointSpace((3.525, 4.0), 0.6),
-        Checkpoint((2.0, 2.4)),
-        Checkpoint((2.0, 1.9)),
-        Checkpoint((4.0, 2.4)),
-        Checkpoint((4.0, 1.9)),
+        HCheckpoint((1.88, 4.0), 0.5),
+        HCheckpoint((3.52, 4.0), 0.5),
+        HCheckpoint((1.65, 2.15), 0.5),
+        HCheckpoint((3.85, 2.15), 0.5),
+        HCheckpoint((2.6, 1.0), 0.8),
     ],
 )
 

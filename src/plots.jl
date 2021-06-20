@@ -135,7 +135,7 @@ end
     return [c.pos[1]], [c.pos[2]]
 end
 
-@recipe function f(c::CheckpointSpace)
+@recipe function f(c::HCheckpoint)
     pos = [c.pos, c.pos .+ (c.width, 0)]
 
     # set plot style

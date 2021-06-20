@@ -48,17 +48,17 @@ Returns euclidian distance of the pedestrian `p` to the checkpoint `c`.
 """
 distance(p::Pedestrian, c::Checkpoint, pos::Point = p.pos) = distance(pos, c.pos)
 
-struct CheckpointSpace{T<:Real} <: Target
+struct HCheckpoint{T<:Real} <: Target
     pos::Point{T} 
     width::Float64
 end
 
 """
-    nearest(c::CheckpointSpace, pos::Point)
+    nearest(c::HCheckpoint, pos::Point)
 
 Returns the nearest point from the checkpoint `c` to the point `pos`.
 """
-function nearest(c::CheckpointSpace, pos::Point)
+function nearest(c::HCheckpoint, pos::Point)
     (xc, yc), w = c.pos, c.width
     x = pos[1]
     return if x < xc
@@ -71,28 +71,28 @@ function nearest(c::CheckpointSpace, pos::Point)
 end
 
 """
-    distance(p::Pedestrian, c::CheckpointSpace, pos::Point = p.pos)
+    distance(p::Pedestrian, c::HCheckpoint, pos::Point = p.pos)
 
 Returns euclidian distance of the pedestrian `p` to the checkpoint `c`. 
 """
-function distance(p::Pedestrian, c::CheckpointSpace, pos::Point = p.pos)
+function distance(p::Pedestrian, c::HCheckpoint, pos::Point = p.pos)
     return distance(pos, nearest(c, p.pos))
 end
 
 # ------------------------------------------------------------------------------------------
 # Doors
 # ------------------------------------------------------------------------------------------
-struct XDoor{T<:Real} <: Door
+struct HDoor{T<:Real} <: Door
     pos::Point{T} 
     width::Float64
 end
 
 """
-    nearest(d::XDoor, pos::Point, r = 0)
+    nearest(d::HDoor, pos::Point, r = 0)
 
 Returns the nearest point from the door `d` to the point `pos`. Argument `r` specifies minimum distance from the side of the door.
 """
-function nearest(d::XDoor, pos::Point, r = 0)
+function nearest(d::HDoor, pos::Point, r = 0)
     (xd, yd), w = d.pos, d.width
     x = pos[1]
     return if x < xd + r
@@ -105,27 +105,27 @@ function nearest(d::XDoor, pos::Point, r = 0)
 end
 
 """
-    distance(p::Pedestrian, d::XDoor, pos::Point = p.pos)
+    distance(p::Pedestrian, d::HDoor, pos::Point = p.pos)
 
 Returns euclidian distance of the pedestrian `p` to the door `d`. 
 """
-function distance(p::Pedestrian, d::XDoor, pos::Point = p.pos)
+function distance(p::Pedestrian, d::HDoor, pos::Point = p.pos)
     return distance(pos, nearest(d, p.pos, p.radius))
 end
 
 """
-    middle(d::XDoor)
+    middle(d::HDoor)
 
 Returns euclidian coordinates of the middle point of the door `d`. 
 """
-middle(d::XDoor) = (d.pos[1] + d.width/2, d.pos[2])
+middle(d::HDoor) = (d.pos[1] + d.width/2, d.pos[2])
 
 """
-    isinside(d::XDoor, pos::Point, r = 0)
+    isinside(d::HDoor, pos::Point, r = 0)
 
 Checks wheter given position lies inside the door area. Argument `r` specifies minimum distance from the side of the door.
 """
-function isinside(d::XDoor, pos::Point, r = 0)
+function isinside(d::HDoor, pos::Point, r = 0)
     x, y = pos
     (xd, yd), w = d.pos, d.width
 
