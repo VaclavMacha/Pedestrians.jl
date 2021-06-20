@@ -223,7 +223,7 @@ end
 
 function run!(m::Model, iter)
 
-    bar = Progress(iter)
+    bar = Progress(iter; showspeed = true)
     for i in 1:iter
         step!(m)
 

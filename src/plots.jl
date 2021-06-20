@@ -1,7 +1,7 @@
 using .Plots
 using .Plots: Plot
 
-export makeplot, set_palette!, set_main_color!, default_palette
+export makeplot, set_palette!, set_main_color!, default_palette, run_anim!
 
 # color definitions
 function default_palette()
@@ -256,4 +256,31 @@ function makeplot(
         plot!(plt, model.pedestrians; add_view, add_personal)
     end
     return plt
+end
+
+function run_anim!(m::Model, iter, filename::String; at::Int = 5, fps::Int = 20)
+
+    bar = Progress(iter; showspeed = true)
+    anim = Animation()
+    for i in 1:iter
+        step!(m)
+
+        # progress bar
+        k = length(keys(m.pedestrians))
+        next!(bar; showvalues = [
+                (:iter, i),
+                (:pedestrians, k)
+        ])
+        if mod(iter, at) == 0
+            title = @sprintf "Pedestrians: %4.1f s" m.Δt * m.iter[]
+            makeplot(m; title)
+            frame(anim)
+        end
+        if m.stop[]
+            finish!(bar)
+            break
+        end
+    end
+    gif(anim, filename; fps)
+    return
 end

@@ -1,6 +1,7 @@
 module Pedestrians
 
 using LinearAlgebra
+using Printf
 using ProgressMeter
 using Random
 using Requires
