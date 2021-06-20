@@ -1,8 +1,11 @@
 module Pedestrians
 
 using LinearAlgebra
+using ProgressMeter
 using Random
 using Requires
+
+export run!
 
 include("utilities.jl")
 include("core.jl")

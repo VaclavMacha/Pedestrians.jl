@@ -23,5 +23,8 @@ function add_pedestrian!(s::Basic, m::Model)
             add_pedestrian!(m, Pedestrian(0, middle(d); vel = s.vel_init))
         end
     end
+    if maxid(model) == s.max_peds && npads(m) == 0
+        m.stop = true
+    end
     return
 end

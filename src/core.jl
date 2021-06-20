@@ -92,7 +92,7 @@ abstract type ScheduleStrategy end
 abstract type TargetStrategy end
 abstract type MoveStrategy end
 
-struct Model{T<:Real}
+Base.@kwdef struct Model{T<:Real}
     # room specification
     room::Room
 
@@ -103,14 +103,33 @@ struct Model{T<:Real}
     move_strategy::MoveStrategy
 
     # pedestrians
-    pedestrians::Dict{Int, Pedestrian}
-    history::Dict{Int, Pedestrian}
+    pedestrians::Dict{Int, Pedestrian} = Dict{Int, Pedestrian}()
+    history::Dict{Int, Pedestrian} = Dict{Int, Pedestrian}()
 
     # additional parameters
-    Δt::T
-    maxid::Ref{Int}
-    iter::Ref{Int}
-    safe_add::Bool
+    Δt::T = 0.05
+    maxid::Ref{Int} = Ref(0)
+    iter::Ref{Int} = Ref(0)
+    safe_add::Bool = true
+    stop::Ref{Bool} = Ref(false)
+end
+
+function Model(
+    room,
+    time_strategy,
+    schedule_strategy,
+    target_strategy,
+    move_strategy,
+    kwargs...
+)
+    return Model(;
+        room,
+        time_strategy,
+        schedule_strategy,
+        target_strategy,
+        move_strategy,
+        kwargs...
+    )
 end
 
 function Base.show(io::IO, m::Model)
@@ -129,23 +148,10 @@ function Base.show(io::IO, m::Model)
 end
 
 maxid(m::Model) = m.maxid[]
+npads(m::Model) = isempty(m.pedestrians)
 iter(m::Model) = m.iter[]
 allids(m::Model) = collect(keys(m.pedestrians))
 allpedestrians(m::Model) = collect(values(m.pedestrians))
-
-function step!(m::Model)
-    # add new pedestrians
-    add_pedestrian!(m.time_strategy, m)
-
-    # move all pedestrians
-    for id in scheduler(m.schedule_strategy, m)
-        pedestrian_step!(m.move_strategy, m, m.pedestrians[id])
-    end
-
-    # update counter
-    m.iter[] += 1
-    return
-end
 
 """
     add_pedestrian!(m::Model, p::Pedestrian)
@@ -198,4 +204,38 @@ function move_pedestrian!(m::Model, p::Pedestrian)
     else
         p.pos = p.pos .+ p.vel .* m.Δt
     end
+end
+
+function step!(m::Model)
+    # add new pedestrians
+    add_pedestrian!(m.time_strategy, m)
+
+    # move all pedestrians
+    for id in scheduler(m.schedule_strategy, m)
+        pedestrian_step!(m.move_strategy, m, m.pedestrians[id])
+    end
+
+    # update counter
+    m.iter[] += 1
+    return
+end
+
+function run!(m::Model, iter)
+
+    bar = Progress(iter)
+    for i in 1:iter
+        step!(m)
+
+        # progress bar
+        k = length(keys(m.pedestrians))
+        next!(bar; showvalues = [
+                (:iter, i),
+                (:pedestrians, k)
+        ])
+        if m.stop
+            finish!(bar)
+            break
+        end
+    end
+    return
 end
