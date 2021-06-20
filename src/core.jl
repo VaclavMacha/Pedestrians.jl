@@ -147,6 +147,7 @@ function Base.show(io::IO, m::Model)
     return
 end
 
+set_stop!(m::Model) = m.stop[] = true
 maxid(m::Model) = m.maxid[]
 npads(m::Model) = isempty(m.pedestrians)
 iter(m::Model) = m.iter[]
@@ -232,7 +233,7 @@ function run!(m::Model, iter)
                 (:iter, i),
                 (:pedestrians, k)
         ])
-        if m.stop
+        if m.stop[]
             finish!(bar)
             break
         end
