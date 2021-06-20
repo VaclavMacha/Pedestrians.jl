@@ -84,10 +84,6 @@ function isvalid(room::Room, pos::Point, r = 0)
     return isvalid(room.shape, pos, r)
 end
 
-function isreachable(r::Room, pos1::Point, pos2::Point)
-    return all(o -> isreachable(o, pos1, pos2), r.obstacles)
-end
-
 # ------------------------------------------------------------------------------------------
 # Model specification
 # ------------------------------------------------------------------------------------------

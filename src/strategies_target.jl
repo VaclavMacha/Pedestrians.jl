@@ -34,8 +34,7 @@ function find_target!(s::Nearest, m::Model, p::Pedestrian)
     for (i, t) in enumerate(vcat(m.room.checkpoints, m.room.exits))
         t_pos = nearest(t, p.pos)
         p.pos[2] > t_pos[2] || continue
-        isreachable(m.room, p.pos, t_pos) || continue
-        
+                
         d = distance(p.pos, t_pos)
         if d < dist || abs(d - dist) <= s.ε && rand() > s.p
             dist = d
