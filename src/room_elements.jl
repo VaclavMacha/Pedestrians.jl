@@ -48,6 +48,37 @@ Returns euclidian distance of the pedestrian `p` to the checkpoint `c`.
 """
 distance(p::Pedestrian, c::Checkpoint, pos::Point = p.pos) = distance(pos, c.pos)
 
+struct CheckpointSpace{T<:Real} <: Target
+    pos::Point{T} 
+    width::Float64
+end
+
+"""
+    nearest(c::CheckpointSpace, pos::Point)
+
+Returns the nearest point from the checkpoint `c` to the point `pos`.
+"""
+function nearest(c::CheckpointSpace, pos::Point)
+    (xc, yc), w = c.pos, c.width
+    x = pos[1]
+    return if x < xc
+        (xc, yc)
+    elseif x > xc + w
+        (xc + w, yc)
+    else
+        (x, yc)
+    end
+end
+
+"""
+    distance(p::Pedestrian, c::CheckpointSpace, pos::Point = p.pos)
+
+Returns euclidian distance of the pedestrian `p` to the checkpoint `c`. 
+"""
+function distance(p::Pedestrian, c::CheckpointSpace, pos::Point = p.pos)
+    return distance(pos, nearest(c, p.pos))
+end
+
 # ------------------------------------------------------------------------------------------
 # Doors
 # ------------------------------------------------------------------------------------------
@@ -177,4 +208,19 @@ Checks wheter give point `pos` is valid, i.e., if the distance to the nearest po
 function isvalid(o::Rectangle, pos::Point, r = 0)
     isinside(o, pos) && return false
     return distance(nearest(o, pos), pos) >= r
+end
+
+function isreachable(r::Rectangle, pos1::Point, pos2::Point)
+    a = (pos2[2] - pos1[2])/(pos2[1] - pos1[1]) # line slope
+    b = pos1[2] - a*pos1[1] # line intercept
+
+    # compute retangle corners
+    (xr, yr), w, h = r.pos, r.width, r.height
+    cs = [(xr, yr), (xr + w, yr), (xr + w, yr + h), (xr, yr + h)]
+    if max(pos2[1], pos1[1]) < xr && min(pos2[1], pos1[1]) > xr + w
+        return true
+    elseif max(pos2[2], pos1[2]) < yr && min(pos2[2], pos1[2]) > yr + h
+        return true
+    end
+    return length(unique([sign(a*x - y + b) for (x, y) in cs])) == 1
 end

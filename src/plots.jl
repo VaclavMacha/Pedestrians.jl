@@ -123,9 +123,7 @@ end
     return x, y
 end
 
-@recipe f(c::Checkpoint) = [c]
-@recipe function f(cs::Vector{<:Checkpoint})
-    pos = getproperty.(cs, :pos)
+@recipe function f(c::Checkpoint)
 
     # set plot style
     seriestype  := :scatter
@@ -133,6 +131,22 @@ end
     marker --> :x
     markersize --> 6
     markercolor --> :gray
+
+    return [c.pos[1]], [c.pos[2]]
+end
+
+@recipe function f(c::CheckpointSpace)
+    pos = [c.pos, c.pos .+ (c.width, 0)]
+
+    # set plot style
+    seriestype  := :path
+    label := ""
+    marker := :vline
+    linecolor := :gray
+    linewidth := 1
+    markercolor := :gray
+    markerstrokecolor := :gray
+    markersize := 6
 
     return first.(pos), last.(pos)
 end
@@ -205,7 +219,9 @@ function makeplot(
 
     # add checkpoints
     if add_checkpoints && !isempty(room.checkpoints)
-        plot!(plt, room.checkpoints)
+        for c in room.checkpoints
+            plot!(plt, c)
+        end
     end
 
     # add obstacles

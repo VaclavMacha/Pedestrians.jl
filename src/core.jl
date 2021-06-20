@@ -19,6 +19,10 @@ Base.@kwdef mutable struct Pedestrian{T<:Real}
     # flags
     finished::Bool = false
     isexit::Bool = false
+
+    # history
+    position::Matrix{T} = zeros(0, 2)
+    velocity::Matrix{T} = zeros(0, 2)
 end
 
 Pedestrian(id, pos; kwargs...) = Pedestrian(; id, pos, kwargs...)
@@ -28,8 +32,9 @@ Pedestrian(id, pos; kwargs...) = Pedestrian(; id, pos, kwargs...)
 
 Checks wheter give position `pos` is valid with respect to pedestrian `p`. 
 """
-function isvalid(p::Pedestrian, pos::Point, radius::Real)
-    return distance(p.pos, pos) >= p.radius + radius
+function isvalid(p::Pedestrian, pos::Point, radius::Real; social::Bool = false)
+    radius_p = social ? p.rlims[2] : p.radius
+    return distance(p.pos, pos) >= radius_p + radius
 end
 
 """
@@ -37,7 +42,9 @@ end
 
 Checks wheter pedestrian `p2` has valid position with respect to pedestrian `p1`. 
 """
-isvalid(p1::Pedestrian, p2::Pedestrian) = isvalid(p1, p2.pos, p2.radius)
+function isvalid(p1::Pedestrian, p2::Pedestrian; kwargs...)
+    return isvalid(p1, p2.pos, p2.radius; kwargs...)
+end
 
 # ------------------------------------------------------------------------------------------
 # Room specification
@@ -77,6 +84,10 @@ function isvalid(room::Room, pos::Point, r = 0)
     return isvalid(room.shape, pos, r)
 end
 
+function isreachable(r::Room, pos1::Point, pos2::Point)
+    return all(o -> isreachable(o, pos1, pos2), r.obstacles)
+end
+
 # ------------------------------------------------------------------------------------------
 # Model specification
 # ------------------------------------------------------------------------------------------
@@ -97,6 +108,7 @@ struct Model{T<:Real}
 
     # pedestrians
     pedestrians::Dict{Int, Pedestrian}
+    history::Dict{Int, Pedestrian}
 
     # additional parameters
     Δt::T
@@ -169,7 +181,10 @@ end
 
 Removes pedestrian `p` from the model `m`. 
 """
-remove_pedestrian!(m::Model, p::Pedestrian) = delete!(m.pedestrians, p.id)
+function remove_pedestrian!(m::Model, p::Pedestrian)
+    m.history[p.id] = deepcopy(p)
+    delete!(m.pedestrians, p.id)
+end
 
 """
     move_pedestrian!(m::Model, p::Pedestrian)
@@ -177,6 +192,8 @@ remove_pedestrian!(m::Model, p::Pedestrian) = delete!(m.pedestrians, p.id)
 Move pedestrian `p` based on its position and velocity or remove `p` from model if in exit.
 """
 function move_pedestrian!(m::Model, p::Pedestrian)
+    p.velocity = vcat(p.velocity, [p.vel[1] p.vel[2]])
+    p.position = vcat(p.position, [p.pos[1] p.pos[2]])
     p.finished && remove_pedestrian!(m, p)
 
     if p.isexit && norm(p.vel, 2)*m.Δt > distance(p.pos, p.target)
