@@ -281,6 +281,5 @@ function run_anim!(m::Model, iter, filename::String; at::Int = 5, fps::Int = 20)
             break
         end
     end
-    gif(anim, filename; fps)
-    return
+    return gif(anim, filename; fps)
 end
