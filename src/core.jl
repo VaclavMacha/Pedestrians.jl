@@ -140,10 +140,10 @@ function Base.show(io::IO, m::Model)
     println(io, "   - entrances: ", length(m.room.entrances))
     println(io, "   - exits: ", length(m.room.exits))
     println(io, " ⋅ pedestrians: ", length(m.pedestrians))
-    print(io,   " ⋅ time strategy: ", m.time_strategy)
-    println(io, " ⋅ schedule strategy: ", m.schedule_strategy)
-    println(io, " ⋅ target strategy: ", m.target_strategy)
-    println(io, " ⋅ move strategy: ", m.move_strategy)
+    println(io, " ⋅ time strategy: ", typeof(m.time_strategy))
+    println(io, " ⋅ schedule strategy: ", typeof(m.schedule_strategy))
+    println(io, " ⋅ target strategy: ", typeof(m.target_strategy))
+    println(io, " ⋅ move strategy: ", typeof(m.move_strategy))
     return
 end
 
